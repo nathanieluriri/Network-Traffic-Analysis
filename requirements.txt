@@ -10,3 +10,4 @@ lightgbm
 streamlit
 streamlit-lottie
 openai
+python-dotenv
