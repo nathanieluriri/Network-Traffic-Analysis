@@ -26,7 +26,16 @@ if "result" not in st.session_state:
 def combine_dataframe(df0,df1):
     # Get the prediction dataframe from the session state
     df1 = pd.DataFrame(df1, columns=["Predicted results"])
-    df0= pd.DataFrame(df0)
+    df0= pd.DataFrame(df0,columns=[
+    "duration", "protocol_type", "service", "flag", "src_bytes", "dst_bytes", "land", "wrong_fragment", "urgent", "hot",
+    "num_failed_logins", "logged_in", "num_compromised", "root_shell", "su_attempted", "num_root", "num_file_creations", 
+    "num_shells", "num_access_files", "num_outbound_cmds", "is_host_login", "is_guest_login", "count", "srv_count", 
+    "serror_rate", "srv_serror_rate", "rerror_rate", "srv_rerror_rate", "same_srv_rate", "diff_srv_rate", "srv_diff_host_rate", 
+    "dst_host_count", "dst_host_srv_count", "dst_host_same_srv_rate", "dst_host_diff_srv_rate", "dst_host_same_src_port_rate", 
+    "dst_host_srv_diff_host_rate", "dst_host_serror_rate", "dst_host_srv_serror_rate", "dst_host_rerror_rate", 
+    "dst_host_srv_rerror_rate"
+]
+)
     df1['Predicted results'] = df1['Predicted results'].astype(object)
 
     df1.loc[df1['Predicted results'] == 0, "Predicted results"] = 'normal'
@@ -35,10 +44,10 @@ def combine_dataframe(df0,df1):
 
 
     # Add the original prediction dataframe as a new column
-    combined_df = pd.concat([df1,df1])
+    combined_df = pd.concat([df0,df1],axis=1)
     
 
-    return df0
+    return combined_df
 
 
 def create_result_dataframe(prediction_df,df1):
@@ -95,19 +104,16 @@ if "model" not in st.session_state:
 
 
 if st.session_state.file:
-    st.info("Value : 1= anomaly, 0= normal",icon="ℹ️")
-    col1, col2, = st.columns([0.99,0.01])
+    st.info("Info : Predicted Results is the last column",icon="ℹ️")
+
 
     s= pd.read_csv(st.session_state.file)
-    st.write("ssssssssssss")
+
     X_train = process_data(s)
-    with col1:
-        st.write(s)
-    with col2:
-        Y_train =BNB_model.predict(X_train)
+    Y_train =BNB_model.predict(X_train)
+    
+    st.write(combine_dataframe(s,Y_train))
         
-        st.write(combine_dataframe(X_train,Y_train))
-        st.write(Y_train)
 
 
 def model_change():
