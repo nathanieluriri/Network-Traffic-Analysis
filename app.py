@@ -23,6 +23,22 @@ st.set_page_config(layout="wide")
 if "result" not in st.session_state:
     st.session_state.result=None
 
+def combine_dataframe(df0,df1):
+    # Get the prediction dataframe from the session state
+    df1 = pd.DataFrame(df1, columns=["Predicted results"])
+    df0= pd.DataFrame(df0)
+    df1['Predicted results'] = df1['Predicted results'].astype(object)
+
+    df1.loc[df1['Predicted results'] == 0, "Predicted results"] = 'normal'
+    df1.loc[df1['Predicted results'] == 1, "Predicted results"] = 'attack'
+
+
+
+    # Add the original prediction dataframe as a new column
+    combined_df = pd.concat([df1,df1])
+    
+
+    return df0
 
 
 def create_result_dataframe(prediction_df,df1):
@@ -78,17 +94,20 @@ if "model" not in st.session_state:
     st.session_state.model=BNB_model
 
 
-    if st.session_state.file:
-        st.info("Value : 1= anomaly, 0= normal",icon="ℹ️")
-        col1, col2, = st.columns([0.99,0.01])
+if st.session_state.file:
+    st.info("Value : 1= anomaly, 0= normal",icon="ℹ️")
+    col1, col2, = st.columns([0.99,0.01])
 
-        s= pd.read_csv(st.session_state.file)
-        X_train = process_data(s)
-        with col1:
-            st.write(s)
-        with col2:
-            
-            st.write(BNB_model.predict(X_train))
+    s= pd.read_csv(st.session_state.file)
+    st.write("ssssssssssss")
+    X_train = process_data(s)
+    with col1:
+        st.write(s)
+    with col2:
+        Y_train =BNB_model.predict(X_train)
+        
+        st.write(combine_dataframe(X_train,Y_train))
+        st.write(Y_train)
 
 
 def model_change():
@@ -126,7 +145,7 @@ with manual:
 
         st.write(st.session_state.df)
         st.selectbox("Selec a model to use",options=["KNN Model (K-Nearest Neighbors)","Decision Tree classifier","Naive Bayes model"],on_change=model_change,key="model_select")
-        @st.cache_resource()
+        
         def predict():
             le(st.session_state.df)
             st.session_state.result = create_result_dataframe(st.session_state.df,st.session_state.pf)
@@ -141,7 +160,7 @@ with manual:
             response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant for a network analysis company you read network datasets and interpret your findings to people who might not understand it properly, the dataset that you analyze will always be related to network traffic analysis. The predicted result will always be between 'normal'- meaning the network is safe and 'attack' meaning there is something suspicious going on in the network communicate this to smartly list and explain briefly what all the parameters in the dataset provided mean and thier impact on the network "},
+                {"role": "system", "content": "You are a helpful assistant for a network analysis company you read network datasets and interpret your findings to people who might not understand it properly, the dataset that you analyze will always be related to network traffic analysis. The predicted result will always be between 'normal'- meaning the network is safe and 'attack' meaning there is something suspicious going on in the network communicate this to smartly list and explain briefly what all the parameters in the dataset provided mean and thier impact on the network. You should also recommend appropriate security measures if the network is under an attack to help beginners see if they can solve the attack "},
                 {"role": "user", "content": f"{st.session_state.result}"},
 
             ]
